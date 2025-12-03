@@ -44,7 +44,7 @@ module.exports.addOneSetting = async function (setting, options, callback) {
             };
             callback(err);
         } else {
-             return (err); //  // Autres erreurs
+             callback (err); //  // Autres erreurs
         }
     }
 };
