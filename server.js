@@ -32,7 +32,7 @@ app.use(passport.session())
 // Declaration des controller pour utilisateur
 const UserController = require("./controllers/UserController");
 const SettingController = require('./controllers/SettingController')
-const TodoController = require('./controllers/TodoController')
+const TaskController = require('./controllers/TaskController')
 
 const DatabaseMiddleware = require('./middlewares/database')
 const LoggerMiddleware = require('./middlewares/logger')
@@ -132,37 +132,20 @@ app.delete("/setting/:id", DatabaseMiddleware.checkConnexion, passport.authentic
 // Création de l'endpoint /settings pour la suppression de plusieurs settings
 app.delete("/settings", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), SettingController.deleteManySettings);
 
+// Création du endpoint pour créer une tâche
+app.post('/tasks', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.createTask);
 
-// Création de l'endpoint /todo pour l'ajout d'une todo
-app.post("/todo", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TodoController.addOneTodo);
+// Création du endpoint pour chercher une tâche par ID
+app.get('/tasks/:id', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.findTaskById);
 
-// Création de l'endpoint /todos pour l'ajout de plusieurs todos
-// app.post("/todos", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TodoController.addManyTodos);
+// Création du endpoint pour récupérer les tâches d'un utilisateur
+app.get('/users/:userId/tasks', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.findUserTasks);
 
-// Création de l'endpoint /todo/:id pour la récupération d'une todo par ID
-app.get("/todo/:id", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TodoController.findOneTodoById);
+// Création du endpoint pour mettre à jour une tâche
+app.put('/tasks/:id', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.updateTask);
 
-// Création de l'endpoint /todo pour la récupération d'une todo
-app.get("/todo", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TodoController.findOneTodo);
-
-// Création de l'endpoint /todos pour la récupération de plusieurs settings par ID
-// app.get("/todos", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TodoController.findManyTodosById);
-
-// Création de l'endpoint /todos_by_filters pour chercher des todos
-app.get("/todos_by_filters", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TodoController.findManyTodos);
-
-// Création de l'endpoint /todo/:id pour la modification d'une todo
-app.put("/todo/:id", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TodoController.updateOneTodo);
-
-// Création de l'endpoint /todos pour la modification de plusieurs todos
-app.put("/todos", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TodoController.updateManyTodos);
-
-// Création de l'endpoint /todo/:id pour la suppression d'une todo
-app.delete("/todo/:id", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TodoController.deleteOneTodo);
-
-// Création de l'endpoint /todos pour la suppression de plusieurs todos
-app.delete("/todos", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TodoController.deleteManyTodos);
-
+// Création du endpoint pour supprimer une tâche
+app.delete('/tasks/:id', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.deleteTask);
 
 // Démarrage de notre serveur sur le port choisi
 app.listen(Config.port, () => {

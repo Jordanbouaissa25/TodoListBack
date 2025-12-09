@@ -10,33 +10,23 @@ const SALT_WORK_FACTOR = 10;
 
 var User = mongoose.model('User', UserSchema)
 module.exports.addOneUser = async function (user, options, callback) {
-  // console.log("1️⃣  Début addOneUser");
 
   try {
-    // console.log("2️⃣  Vérification longueur password :", user.password?.length);
 
     if (user.password.length >= 8) {
 
-      // console.log("3️⃣  Génération du sel...");
       const salt = await bcrypt.genSalt(SALT_WORK_FACTOR);
-      // console.log("4️⃣  Sel généré");
 
       if (user && user.password) {
-        // console.log("5️⃣  Hash du password en cours...");
         user.password = await bcrypt.hash(user.password, salt)
-        // console.log("6️⃣  Hash terminé");
       }
 
-      // console.log("7️⃣  Création new User...");
       var new_user = new User(user);
-      // console.log("8️⃣  new_user créé :", new_user);
+      
 
       var errors = new_user.validateSync();
-      // console.log("9️⃣  Résultat validateSync :", errors);
 
       if (errors) {
-        // console.log("🔟  Erreurs de validation détectées");
-
         errors = errors['errors'];
         var text = Object.keys(errors).map((e) => {
           return errors[e]['properties']['message'];
@@ -53,34 +43,26 @@ module.exports.addOneUser = async function (user, options, callback) {
           type_error: "validator"
         };
 
-        // console.log("1️⃣1️⃣  Callback avec erreur validator");
         callback(err);
 
       } else {
 
-        // console.log("1️⃣2️⃣  Sauvegarde MongoDB...");
         await new_user.save();
-        // console.log("1️⃣3️⃣  Sauvegarde MongoDB OK");
 
         try {
-          // console.log("1️⃣4️⃣  Appel SettingService.addOneSetting...");
           await SettingService.addOneSetting({
             themes: "light",
             language: "fr",
             user_id: new_user._id
           });
-          // console.log("1️⃣5️⃣  SettingService OK");
 
         } catch (err) {
           // console.error("❌ SettingService error:", err);
         }
-
-        // console.log("1️⃣6️⃣  Callback final OK");
         callback(null, new_user.toObject());
       }
 
     } else {
-      // console.log("❌ Mot de passe trop court");
       callback({ msg: "le mot de passe doit faire 8 caractères minimum", type_error: "no-valid" })
     }
 
@@ -99,7 +81,6 @@ module.exports.addOneUser = async function (user, options, callback) {
         type_error: "duplicate"
       };
 
-      console.log("1️⃣8️⃣  Callback erreur duplicité");
       callback(err);
 
     } else {

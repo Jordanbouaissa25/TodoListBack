@@ -69,13 +69,20 @@ after(async function () {
   }
 });
 
+// describe("UserService", () => {
+//     require("./../tests/controllers/services/UserService.test");
+// });
 
-describe("UserService", () => {
-    require("./../tests/controllers/services/UserService.test");
-});
+// describe("UserController", () => {
+//     require("../tests/controllers/UserController.test")
+// })
 
-describe("UserController", () => {
-    require("../tests/controllers/UserController.test")
+// describe("TaskService", () => {
+//     require("../tests/controllers/services/TaskService.test")
+// })
+
+describe("TaskController", () => {
+    require("../tests/controllers/TaskController.test")
 })
 
 // describe("SettingService", () => {
@@ -86,13 +93,6 @@ describe("UserController", () => {
 //     require("../tests/controllers/SettingController.test")
 // })
 
-// describe("TodoService", () => {
-//     require("../tests/controllers/services/TodoService.test")
-// })
-
-// describe("TodoController", () => {
-//     require("../tests/controllers/TodoController.test")
-// })
 
 
 describe("API - Mongo", () => {

@@ -14,6 +14,6 @@ mongoose.connection.on('close', () => Logger.info("Connection à la base de donn
 
 
 
-mongoose.connect(`${process.env.npm_lifecycle_event == 'test' ? process.env.URL_DATABASE_TEST : process.env.URL_DATABASE}/${process.env.npm_lifecycle_event == 'test' ? "TODO_SERVER_PROD" : "TODO_SERVER_PROD"}`)
+mongoose.connect(`${process.env.npm_lifecycle_event == 'test' ? process.env.URL_DATABASE_TEST : process.env.URL_DATABASE}/${process.env.npm_lifecycle_event == 'test' ? "TODO_SERVER_TEST" : "TODO_SERVER_PROD"}`)
 
 // console.log(mongoose.connection.readyState)
