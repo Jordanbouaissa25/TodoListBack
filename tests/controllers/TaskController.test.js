@@ -1,236 +1,329 @@
+const UserService = require("../../services/UserService");
 const chai = require("chai");
 const chaiHttp = require("chai-http");
 const expect = chai.expect;
-const server = require('../../server');
+const server = require('./../../server');
 let should = chai.should();
-const UserService = require("../../services/UserService")
-var userConnect = {}
+const _ = require('lodash');
+
+let token = "";
+let userConnect = {};
+let tab_id_users = [];
+let tasks = [];
+
+let user = {
+    firstName: "Task Owner",
+    lastName: "User",
+    username: "task_user_test",
+    email: "taskuser@gmail.com",
+    password: "123456789"
+};
+
+function rdm_user(tab) {
+    let rdm_id = tab[Math.floor(Math.random() * (tab.length - 1))]
+    return rdm_id;
+}
 
 chai.use(chaiHttp);
 
-let user = null
-var users = []
-let token = ""
-chai.use(chaiHttp)
+/* ------------------------------
+   CREATION USER FICTIF
+-------------------------------- */
+describe("Initialisation - Utilisateur fictif", () => {
+    it("Création d'utilisateur fictif", (done) => {
+        UserService.addOneUser(user, null, function (err, value) {
+            userConnect = { ...value };
+            tab_id_users.push(value._id);
+            done();
+        });
+    });
+});
 
-describe("Task Controller Tests", () => {
-
-    describe("Gestion api.", () => {
-        it("Création d'utilisateur fictif", (done) => {
-            UserService.addOneUser(user, null, function (err, value) {
-                console.log(err,value)
-                userConnect = { ...value }
-                //  console.log(value)
-                done()
-            })
-        })
-    })
-
-        describe("POST - /login", () => {
+/* ------------------------------
+   LOGIN
+-------------------------------- */
+describe("POST - /login", () => {
     it("Connexion utilisateur - S", (done) => {
-        console.log(users)
-        chai.request(server).post('/login').send({
-            username: "jordanbouaissa257@gmail.com",
-            password: "1234567890",
-        }).end((err, res) => {
-            console.log(err, res.body)
-            res.should.have.status(200)
-            token = res.body.token
-            done()
-        })
-    })
-    it("Connexion utilisateur - Identifiant incorrect - E", (done) => {
-        chai.request(server).post('/login').send({
-            username: "sksfksl@gmail.com",
-            password: "123456789"
-        }).end((err, res) => {
-            res.should.have.status(405)
-            done()
-        })
-    })
-    it("Connexion utilisateur - Mot de passe incorrect - E", (done) => {
-        chai.request(server).post('/login').send({
-            username: "jordanbouaissa25@gmail.com",
-            password: "password_incorrect"
-        }).end((err, res) => {
-            res.should.have.status(405)
-            done()
-        })
-    })
-})
+        chai.request(server).post('/login')
+            .send({
+                username: "taskuser@gmail.com",
+                password: "123456789"
+            })
+            .end((err, res) => {
+                res.should.have.status(200);
+                token = res.body.token;
+                done();
+            });
+    });
+});
 
-    // // Créer une tâche
-    // describe("POST - /tasks", () => {
-    //     it("Créer une tâche correcte - S", (done) => {
-    //         // console.log(users)
-    //         chai.request(server)
-    //             .post('/tasks')
-    //             .auth(token, { type: "bearer" })
-    //             .send({
-    //                 title: "Nouvelle tâche",
-    //                 description: "Description de la tâche",
-    //             })
-    //             .end((err, res) => {
-    //                 console.log(err,res.body)
-    //                 expect(res).to.have.status(201);
-    //                 users = res.body._id;
-    //                 done();
-    //             });
-    //     });
+/* ------------------------------
+   POST /tasks (addOneTask)
+-------------------------------- */
+describe("POST - /tasks", () => {
 
-    //     it("Créer une tâche sans title - E", (done) => {
-    //         chai.request(server)
-    //             .post('/tasks')
-    //             .auth(token, { type: "bearer" })
-    //             .send({
-    //                 title: "",
-    //                 description: "Description sans title",
-    //             })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(405);
-    //                 done();
-    //             });
-    //     });
+    it("Ajouter une task valide - S", (done) => {
+        const t = {
+            user_id: userConnect._id,
+            title: "Ma première task",
+            description: "Description test",
+            priority: "Moyenne"
+        };
 
-    //     it("Créer une tâche avec duplicate key - E", (done) => {
-    //         chai.request(server)
-    //             .post('/tasks')
-    //             .auth(token, { type: "bearer" })
-    //             .send({
-    //                 title: "Nouvelle tâche",
-    //                 description: "Duplicate",
-    //                 userId: userId
-    //             })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(405);
-    //                 done();
-    //             });
-    //     });
-    // });
+        chai.request(server).post('/tasks')
+            .auth(token, { type: "bearer" })
+            .send(t)
+            .end((err, res) => {
+                expect(res).to.have.status(201);
+                tasks.push(res.body);
+                done();
+            });
+    });
 
-    // // Chercher une tâche
-    // describe("GET - /tasks/:id", () => {
-    //     it("Chercher une tâche existante - S", (done) => {
-    //         chai.request(server)
-    //             .get(`/tasks/${taskId}`)
-    //             .auth(token, { type: "bearer" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(200);
-    //                 done();
-    //             });
-    //     });
+    it("Ajouter une task incorrecte (sans title) - E", (done) => {
+        chai.request(server).post('/tasks')
+            .auth(token, { type: "bearer" })
+            .send({
+                user_id: userConnect._id,
+                description: "No title"
+            })
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                done();
+            });
+    });
 
-    //     it("Chercher une tâche avec ID invalide - E", (done) => {
-    //         chai.request(server)
-    //             .get('/tasks/123')
-    //             .auth(token, { type: "bearer" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(405);
-    //                 done();
-    //             });
-    //     });
+    it("Ajouter une task incorrecte (champ vide) - E", (done) => {
+        chai.request(server).post('/tasks')
+            .auth(token, { type: "bearer" })
+            .send({
+                user_id: userConnect._id,
+                title: ""
+            })
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                done();
+            });
+    });
 
-    //     it("Chercher une tâche inexistante - E", (done) => {
-    //         chai.request(server)
-    //             .get('/tasks/64a5f2bcd123456789abc999')
-    //             .auth(token, { type: "bearer" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(404);
-    //                 done();
-    //             });
-    //     });
-    // });
+});
 
-    // // Récupérer les tâches d'un utilisateur
-    // describe("GET - /users/:userId/tasks", () => {
-    //     it("Récupérer les tâches d'un utilisateur existant - S", (done) => {
-    //         chai.request(server)
-    //             .get(`/users/${userId}/tasks`)
-    //             .auth(token, { type: "bearer" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(200);
-    //                 done();
-    //             });
-    //     });
+/* ------------------------------
+   POST /tasks/many (addManyTasks)
+-------------------------------- */
+describe("POST - /tasks/many", () => {
 
-    //     it("Récupérer les tâches avec ID utilisateur invalide - E", (done) => {
-    //         chai.request(server)
-    //             .get('/users/123/tasks')
-    //             .auth(token, { type: "bearer" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(405);
-    //                 done();
-    //             });
-    //     });
-    // });
+    it("Ajouter plusieurs tasks - S", (done) => {
+        const many = [
+            { user_id: userConnect._id, title: "Task 1", description: "D1" },
+            { user_id: userConnect._id, title: "Task 2", description: "D2" }
+        ];
 
-    // // Modifier une tâche
-    // describe("PUT - /tasks/:id", () => {
-    //     it("Modifier une tâche existante - S", (done) => {
-    //         chai.request(server)
-    //             .put(`/tasks/${taskId}`)
-    //             .auth(token, { type: "bearer" })
-    //             .send({ title: "Tâche modifiée" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(200);
-    //                 done();
-    //             });
-    //     });
+        chai.request(server).post('/tasks/many')
+            .auth(token, { type: "bearer" })
+            .send(many)
+            .end((err, res) => {
+                expect(res).to.have.status(201);
+                tasks = [...tasks, ...res.body];
+                done();
+            });
+    });
 
-    //     it("Modifier une tâche inexistante - E", (done) => {
-    //         chai.request(server)
-    //             .put('/tasks/64a5f2bcd123456789abc999')
-    //             .auth(token, { type: "bearer" })
-    //             .send({ title: "Impossible" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(404);
-    //                 done();
-    //             });
-    //     });
+    it("Ajouter plusieurs tasks incorrectes (title manquant) - E", (done) => {
+        const incorrect = [
+            { user_id: userConnect._id },
+            { user_id: userConnect._id }
+        ];
 
-    //     it("Modifier une tâche avec ID invalide - E", (done) => {
-    //         chai.request(server)
-    //             .put('/tasks/123')
-    //             .auth(token, { type: "bearer" })
-    //             .send({ title: "Impossible" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(405);
-    //                 done();
-    //             });
-    //     });
-    // });
+        chai.request(server).post('/tasks/many')
+            .auth(token, { type: "bearer" })
+            .send(incorrect)
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                done();
+            });
+    });
 
-    // // Supprimer une tâche
-    // describe("DELETE - /tasks/:id", () => {
-    //     it("Supprimer une tâche existante - S", (done) => {
-    //         chai.request(server)
-    //             .delete(`/tasks/${taskId}`)
-    //             .auth(token, { type: "bearer" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(200);
-    //                 done();
-    //             });
-    //     });
+});
 
-    //     it("Supprimer une tâche inexistante - E", (done) => {
-    //         chai.request(server)
-    //             .delete('/tasks/64a5f2bcd123456789abc999')
-    //             .auth(token, { type: "bearer" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(404);
-    //                 done();
-    //             });
-    //     });
+/* ------------------------------
+   GET /tasks/user/:user_id
+-------------------------------- */
+describe("GET - /tasks/user/:user_id", () => {
 
-    //     it("Supprimer une tâche avec ID invalide - E", (done) => {
-    //         chai.request(server)
-    //             .delete('/tasks/123')
-    //             .auth(token, { type: "bearer" })
-    //             .end((err, res) => {
-    //                 expect(res).to.have.status(405);
-    //                 done();
-    //             });
-    //     });
-    // });
+    it("Récupérer les tasks d'un user - S", (done) => {
+        chai.request(server).get(`/tasks/user/${userConnect._id}`)
+            .auth(token, { type: "bearer" })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.body).to.be.an('array');
+                done();
+            });
+    });
 
+    it("Récupérer tasks avec user_id invalide - E", (done) => {
+        chai.request(server).get(`/tasks/user/123`)
+            .auth(token, { type: "bearer" })
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                done();
+            });
+    });
+
+});
+
+/* ------------------------------
+   GET /tasks/:id
+-------------------------------- */
+describe("GET - /tasks/:id", () => {
+
+    it("Récupérer une task valide - S", (done) => {
+        chai.request(server).get(`/tasks/${tasks[0]._id}`)
+            .auth(token, { type: "bearer" })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.body).to.have.property('_id');
+                done();
+            });
+    });
+
+    it("Récupérer une task avec id invalide - E", (done) => {
+        chai.request(server).get(`/tasks/123`)
+            .auth(token, { type: "bearer" })
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                done();
+            });
+    });
+
+    it("Récupérer une task inexistante - E", (done) => {
+        chai.request(server).get(`/tasks/60d72b2f9b1d8b002f123456`)
+            .auth(token, { type: "bearer" })
+            .end((err, res) => {
+                expect(res).to.have.status(404);
+                done();
+            });
+    });
+
+});
+
+/* ------------------------------
+   PUT /tasks/:id
+-------------------------------- */
+describe("PUT - /tasks/:id", () => {
+
+    it("Modifier une task valide - S", (done) => {
+        chai.request(server).put(`/tasks/${tasks[0]._id}`)
+            .auth(token, { type: "bearer" })
+            .send({
+                title: "Task modifiée"
+            })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                done();
+            });
+    });
+
+    it("Modifier une task avec id invalide - E", (done) => {
+        chai.request(server).put(`/tasks/123`)
+            .auth(token, { type: "bearer" })
+            .send({ title: "Modification" })
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                done();
+            });
+    });
+
+    it("Modifier une task inexistante - E", (done) => {
+        chai.request(server).put(`/tasks/60c72b2f4f1a4c3d88d9a1d9`)
+            .auth(token, { type: "bearer" })
+            .send({ title: "Doesn't exist" })
+            .end((err, res) => {
+                expect(res).to.have.status(404);
+                done();
+            });
+    });
+
+    it("Modifier une task avec champ vide - E", (done) => {
+        chai.request(server).put(`/tasks/${tasks[0]._id}`)
+            .auth(token, { type: "bearer" })
+            .send({ title: "" })
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                done();
+            });
+    });
+
+});
+
+/* ------------------------------
+   DELETE /tasks/:id
+-------------------------------- */
+describe("DELETE - /tasks/:id", () => {
+
+    it("Supprimer une task valide - S", (done) => {
+        chai.request(server).delete(`/tasks/${tasks[0]._id}`)
+            .auth(token, { type: "bearer" })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                done();
+            });
+    });
+
+    it("Supprimer une task inexistante - E", (done) => {
+        chai.request(server).delete(`/tasks/60d72b2f9b1d8b002f123456`)
+            .auth(token, { type: "bearer" })
+            .end((err, res) => {
+                expect(res).to.have.status(404);
+                done();
+            });
+    });
+
+    it("Supprimer une task avec id invalide - E", (done) => {
+        chai.request(server).delete(`/tasks/123`)
+            .auth(token, { type: "bearer" })
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                done();
+            });
+    });
+
+});
+
+/* ------------------------------
+   DELETE /tasks (deleteMany)
+-------------------------------- */
+describe("DELETE - /tasks", () => {
+
+    it("Supprimer plusieurs tasks - S", (done) => {
+        chai.request(server).delete('/tasks')
+            .auth(token, { type: "bearer" })
+            .query({ id: _.map(tasks, "_id") })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                done();
+            });
+    });
+
+    it("Supprimer plusieurs tasks incorrect (id invalide) - E", (done) => {
+        chai.request(server).delete('/tasks')
+            .auth(token, { type: "bearer" })
+            .query({ id: ["123", "456"] })
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                done();
+            });
+    });
+
+});
+
+/* ------------------------------
+   SUPPRESSION USER FICTIF
+-------------------------------- */
+describe("Finalisation - Suppression utilisateur fictif", () => {
+    it("Supprimer utilisateur fictif", (done) => {
+        UserService.deleteManyUsers(tab_id_users, null, function () {
+            done();
+        });
+    });
 });

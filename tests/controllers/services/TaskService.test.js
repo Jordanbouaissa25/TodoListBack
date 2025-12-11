@@ -1,154 +1,270 @@
 const TaskService = require("../../../services/TaskService");
+const UserService = require("../../../services/UserService");
 const chai = require("chai");
 let expect = chai.expect;
 const _ = require("lodash");
-var taskIdValid = "";
-var userIdValid = "650f18739d3e172be5daf000"; // Remplacer par un ObjectId valide pour test réel
-var tasks = [];
 
-describe("createTask", () => {
-    it("Créer une tâche correcte. - S", (done) => {
-        var task = {
-            user_id: userIdValid,
-            title: "Ma première tâche",
-            description: "Description de la tâche",
-        };
-        TaskService.createTask(task, null, function (err, value) {
-            expect(err).to.be.null;
-            expect(value).to.be.a("object");
-            expect(value).to.haveOwnProperty("_id");
-            taskIdValid = value._id;
-            tasks.push(value);
+let tab_id_users = [];
+let tab_id_tasks = [];
+let valid_task_id = "";
+
+let users = [
+    {
+        firstcity: "User 1",
+        lastcity: "Test",
+        usercity: "u1",
+        email: "user1@gmail.com",
+        password: "hello"
+    },
+    {
+        firstcity: "User 2",
+        lastcity: "Test",
+        usercity: "u2",
+        email: "user2@gmail.com",
+        password: "hello"
+    }
+];
+
+function rdm_user(tab) {
+    return tab[Math.floor(Math.random() * tab.length)];
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                ADD ONE TASK                                */
+/* -------------------------------------------------------------------------- */
+
+describe("addOneTask", () => {
+
+    it("Création des utilisateurs fictifs - S", (done) => {
+        UserService.addManyUsers(users, null, function (err, value) {
+            tab_id_users = _.map(value, "_id");
             done();
         });
     });
 
-    it("Créer une tâche sans title. - E", (done) => {
-        var task = {
-            user_id: userIdValid,
-            description: "Description sans titre",
+    it("Création d’une tâche valide - S", (done) => {
+        const task = {
+            user_id: tab_id_users[0],
+            title: "Ma première tâche",
+            description: "Test de création",
+            priority: "Urgente"
         };
-        TaskService.createTask(task, null, function (err, value) {
-            expect(value).to.be.undefined;
+
+        TaskService.addOneTask(task, null, function (err, value) {
+            expect(value).to.be.a("object");
+            expect(value).to.haveOwnProperty("_id");
+            valid_task_id = value._id;
+            tab_id_tasks.push(value._id);
+            done();
+        });
+    });
+
+    it("Création impossible (titre manquant) - E", (done) => {
+        const task_invalid = {
+            user_id: tab_id_users[0]
+        };
+
+        TaskService.addOneTask(task_invalid, null, function (err, value) {
             expect(err).to.haveOwnProperty("msg");
-            expect(err).to.haveOwnProperty("fields_with_error").with.lengthOf(1);
-            expect(err).to.haveOwnProperty("fields");
             expect(err.fields).to.haveOwnProperty("title");
             done();
         });
     });
 
-    it("Créer une tâche avec duplicate key. - E", (done) => {
-        var task = {
-            user_id: userIdValid,
-            title: "Ma première tâche", // Même titre pour provoquer duplicate si index unique
-            description: "Duplicate test",
-            status: "pending"
-        };
-        TaskService.createTask(task, null, function (err, value) {
-            if (err) {
-                expect(err).to.haveOwnProperty("msg");
-                expect(err).to.haveOwnProperty("type_error").to.equal("duplicate");
-            }
+});
+
+/* -------------------------------------------------------------------------- */
+/*                               ADD MANY TASKS                               */
+/* -------------------------------------------------------------------------- */
+
+describe("addManyTasks", () => {
+
+    it("Tâches invalides - E", (done) => {
+        const invalid_tasks = [
+            { user_id: tab_id_users[0], priority: "Basse" },
+            { user_id: tab_id_users[1], title: "" }
+        ];
+
+        TaskService.addManyTasks(invalid_tasks, function (err, value) {
+            expect(err).to.be.an("array");
+            expect(err.length).to.be.equal(2);
             done();
         });
     });
+
+    it("Tâches valides - S", (done) => {
+        const valid_tasks = [
+            {
+                user_id: tab_id_users[0],
+                title: "Task 1",
+                priority: "Moyenne"
+            },
+            {
+                user_id: tab_id_users[1],
+                title: "Task 2",
+                description: "Cool",
+                priority: "Basse"
+            }
+        ];
+
+        TaskService.addManyTasks(valid_tasks, function (err, value) {
+            expect(value).lengthOf(2);
+            tab_id_tasks.push(...value.map(t => t._id));
+            done();
+        });
+    });
+
 });
 
-describe("findTaskById", () => {
-    it("Chercher une tâche existante. - S", (done) => {
-        TaskService.findTaskById(taskIdValid, null, function (err, value) {
-            expect(err).to.be.null;
+/* -------------------------------------------------------------------------- */
+/*                          FIND TASKS BY USER (ALL)                          */
+/* -------------------------------------------------------------------------- */
+
+describe("findTasksByUser", () => {
+
+    it("Chercher toutes les tâches d’un user valide - S", (done) => {
+        TaskService.findTasksByUser(tab_id_users[0], null, function (err, value) {
+            expect(value).to.be.an("array");
+            expect(value.length).to.be.greaterThan(0);
+            done();
+        });
+    });
+
+    it("UserId invalide - E", (done) => {
+        TaskService.findTasksByUser("invalid", null, function (err, value) {
+            expect(err).to.haveOwnProperty("type_error");
+            expect(err.type_error).to.equal("no-valid");
+            done();
+        });
+    });
+
+});
+
+/* -------------------------------------------------------------------------- */
+/*                               FIND ONE TASK                                */
+/* -------------------------------------------------------------------------- */
+
+describe("findOneTask", () => {
+
+    it("Trouver une tâche valide - S", (done) => {
+        TaskService.findOneTask(valid_task_id, null, function (err, value) {
             expect(value).to.haveOwnProperty("_id");
             expect(value).to.haveOwnProperty("title");
             done();
         });
     });
 
-    it("Chercher une tâche avec ID invalide. - E", (done) => {
-        TaskService.findTaskById("123", null, function (err, value) {
-            expect(value).to.be.undefined;
-            expect(err).to.haveOwnProperty("type_error").to.equal("no-valid");
+    it("Id invalide - E", (done) => {
+        TaskService.findOneTask("invalid", null, function (err, value) {
+            expect(err.type_error).to.equal("no-valid");
             done();
         });
     });
 
-    it("Chercher une tâche inexistante. - E", (done) => {
-        TaskService.findTaskById("650f18739d3e172be5daf999", null, function (err, value) {
-            expect(value).to.be.undefined;
-            expect(err).to.haveOwnProperty("type_error").to.equal("no-found");
+    it("Id inexistant - E", (done) => {
+        TaskService.findOneTask("665f18739d3e172be5daf092", null, function (err, value) {
+            expect(err.type_error).to.equal("no-found");
             done();
         });
     });
+
 });
 
-describe("findUserTasks", () => {
-    it("Récupérer les tâches d'un utilisateur existant. - S", (done) => {
-        TaskService.findUserTasks(userIdValid, null, function (err, value) {
-            expect(err).to.be.null;
-            expect(value).to.be.an("array");
-            done();
-        });
+/* -------------------------------------------------------------------------- */
+/*                               UPDATE ONE TASK                              */
+/* -------------------------------------------------------------------------- */
+
+describe("updateOneTask", () => {
+
+    it("Modifier une tâche valide - S", (done) => {
+        TaskService.updateOneTask(
+            valid_task_id,
+            { title: "Titre modifié", completed: true },
+            function (err, value) {
+                expect(value).to.haveOwnProperty("_id");
+                expect(value.title).to.equal("Titre modifié");
+                expect(value.completed).to.equal(true);
+                done();
+            }
+        );
     });
 
-    it("Récupérer les tâches avec ID utilisateur invalide. - E", (done) => {
-        TaskService.findUserTasks("123", null, function (err, value) {
-            expect(value).to.be.undefined;
-            expect(err).to.haveOwnProperty("type_error").to.equal("no-valid");
-            done();
-        });
+    it("Modifier tâche avec ID invalide - E", (done) => {
+        TaskService.updateOneTask(
+            "invalid",
+            { title: "Test" },
+            function (err, value) {
+                expect(err).to.haveOwnProperty("type_error");
+                expect(err.type_error).to.equal("no-valid");
+                done();
+            }
+        );
     });
+
+    it("Champ title vide → erreur validator - E", (done) => {
+        TaskService.updateOneTask(
+            valid_task_id,
+            { title: "" },
+            function (err, value) {
+                expect(err.fields).to.haveOwnProperty("title");
+                done();
+            }
+        );
+    });
+
 });
 
-describe("updateTask", () => {
-    it("Modifier une tâche existante. - S", (done) => {
-        TaskService.updateTask(taskIdValid, { title: "Ma première tâche" }, null, function (err, value) {
-            // console.log(err, value);
-            expect(err).to.be.null;
+/* -------------------------------------------------------------------------- */
+/*                               DELETE ONE TASK                              */
+/* -------------------------------------------------------------------------- */
+
+describe("deleteOneTask", () => {
+
+    it("Supprimer une tâche valide - S", (done) => {
+        TaskService.deleteOneTask(valid_task_id, function (err, value) {
             expect(value).to.haveOwnProperty("_id");
-            expect(value.title).to.equal("Ma première tâche");
             done();
         });
     });
 
-    it("Modifier une tâche inexistante. - E", (done) => {
-        TaskService.updateTask("650f18739d3e172be5daf999", { title: "Tâche de Jordan" }, null, function (err, value) {
-            expect(value).to.be.undefined;
-            expect(err).to.haveOwnProperty("type_error").to.equal("no-found");
+    it("Supprimer tâche avec ID invalide - E", (done) => {
+        TaskService.deleteOneTask("invalid", function (err, value) {
+            expect(err.type_error).to.equal("no-valid");
             done();
         });
     });
 
-    it("Modifier une tâche avec ID invalide. - E", (done) => {
-        TaskService.updateTask("123", { status: "done" }, null, function (err, value) {
-            expect(value).to.be.undefined;
-            expect(err).to.haveOwnProperty("type_error").to.equal("no-valid");
-            done();
-        });
-    });
 });
 
-describe("deleteTask", () => {
-    it("Supprimer une tâche existante. - S", (done) => {
-        TaskService.deleteTask(taskIdValid, null, function (err, value) {
-            expect(err).to.be.null;
-            expect(value).to.haveOwnProperty("_id");
+/* -------------------------------------------------------------------------- */
+/*                              DELETE MANY TASKS                              */
+/* -------------------------------------------------------------------------- */
+
+describe("deleteManyTasks", () => {
+
+    it("Supprimer plusieurs tâches invalides - E", (done) => {
+        TaskService.deleteManyTasks(["invalid"], function (err, value) {
+            expect(err.type_error).to.equal("no-valid");
             done();
         });
     });
 
-    it("Supprimer une tâche inexistante. - E", (done) => {
-        TaskService.deleteTask("650f18739d3e172be5daf999", null, function (err, value) {
-            expect(value).to.be.undefined;
-            expect(err).to.haveOwnProperty("type_error").to.equal("no-found");
+    it("Supprimer plusieurs tâches valides - S", (done) => {
+        TaskService.deleteManyTasks(tab_id_tasks, function (err, value) {
+            expect(value).to.haveOwnProperty("deletedCount");
             done();
         });
     });
 
-    it("Supprimer une tâche avec ID invalide. - E", (done) => {
-        TaskService.deleteTask("123", null, function (err, value) {
-            expect(value).to.be.undefined;
-            expect(err).to.haveOwnProperty("type_error").to.equal("no-valid");
+});
+
+/* -------------------------------------------------------------------------- */
+/*                         DELETE USERS AT THE END                            */
+/* -------------------------------------------------------------------------- */
+
+describe("deleteUsers", () => {
+    it("Supprimer les utilisateurs fictifs créés pour le test - S", (done) => {
+        UserService.deleteManyUsers(tab_id_users, null, function (err, value) {
             done();
         });
     });

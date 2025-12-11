@@ -132,20 +132,19 @@ app.delete("/setting/:id", DatabaseMiddleware.checkConnexion, passport.authentic
 // Création de l'endpoint /settings pour la suppression de plusieurs settings
 app.delete("/settings", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), SettingController.deleteManySettings);
 
-// Création du endpoint pour créer une tâche
-app.post('/tasks', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.createTask);
+app.post("/tasks", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.addOneTask);
 
-// Création du endpoint pour chercher une tâche par ID
-app.get('/tasks/:id', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.findTaskById);
+app.post("/tasks/many", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.addManyTasks);
 
-// Création du endpoint pour récupérer les tâches d'un utilisateur
-app.get('/users/:userId/tasks', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.findUserTasks);
+app.get("/tasks/user/:user_id", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.findTasksByUser);
 
-// Création du endpoint pour mettre à jour une tâche
-app.put('/tasks/:id', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.updateTask);
+app.get("/tasks/:id", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.findOneTask);
 
-// Création du endpoint pour supprimer une tâche
-app.delete('/tasks/:id', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.deleteTask);
+app.put("/tasks/:id", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.updateOneTask);
+
+app.delete("/tasks/:id", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.deleteOneTask);
+
+app.delete("/tasks", DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), TaskController.deleteManyTasks);
 
 // Démarrage de notre serveur sur le port choisi
 app.listen(Config.port, () => {
