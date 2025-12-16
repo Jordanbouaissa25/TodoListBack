@@ -69,9 +69,9 @@ after(async function () {
   }
 });
 
-// describe("UserService", () => {
-//     require("./../tests/controllers/services/UserService.test");
-// });
+describe("UserService", () => {
+    require("./../tests/controllers/services/UserService.test");
+});
 
 // describe("UserController", () => {
 //     require("../tests/controllers/UserController.test")
@@ -81,9 +81,9 @@ after(async function () {
 //     require("../tests/controllers/services/TaskService.test")
 // })
 
-describe("TaskController", () => {
-    require("../tests/controllers/TaskController.test")
-})
+// describe("TaskController", () => {
+//     require("../tests/controllers/TaskController.test")
+// })
 
 // describe("SettingService", () => {
 //     require('../tests/controllers/services/SettingService.test')

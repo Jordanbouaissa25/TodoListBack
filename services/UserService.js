@@ -147,6 +147,48 @@ module.exports.addManyUsers = async function (users, options, callback) {
   }
 };
 
+module.exports.loginWithApple = async function (appleId, email, options, callback) {
+  if (!appleId) return callback({ msg: "AppleId est requis.", type_error: "no-valid" });
+
+  try {
+    const user = await User.findOne({ $or: [{ appleId }, { email }] });
+    if (user) {
+      const token = TokenUtils.createToken({ _id: user._id }, null);
+      await User.findByIdAndUpdate(user._id, { token }, { new: true });
+      return callback(null, { ...user.toObject(), token });
+    }
+
+    // Création d'un nouvel utilisateur si inexistant
+    const newUser = new User({
+      appleId,
+      email: email || "",
+      password: Math.random().toString(36).slice(-8)
+    });
+
+    const errors = newUser.validateSync();
+    if (errors) {
+      const text = Object.keys(errors).map((e) => errors[e].properties.message).join(' ');
+      return callback({ msg: text, type_error: "validator" });
+    }
+
+    await newUser.save();
+    try {
+      await SettingService.addOneSetting({
+        themes: "light",
+        language: "fr",
+        user_id: newUser._id
+      });
+    } catch (err) { }
+
+    const token = TokenUtils.createToken({ _id: newUser._id }, null);
+    await User.findByIdAndUpdate(newUser._id, { token }, { new: true });
+
+    callback(null, { ...newUser.toObject(), token });
+  } catch (err) {
+    callback({ msg: "Erreur serveur", type_error: "server-error" });
+  }
+};
+
 module.exports.loginUser = async function (email, password, options, callback) {
   module.exports.findOneUser(["email"], email, null, async (err, value) => {
     if (err)

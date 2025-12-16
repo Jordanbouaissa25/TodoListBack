@@ -108,6 +108,39 @@ describe("addManyUsers", () => {
     });
 });
 
+    describe('loginWithApple', () => {
+        it('Crée et connecte un nouvel utilisateur Apple', (done) => {
+            const appleId = 'apple123';
+            const email = 'appleuser@test.com';
+
+            UserService.loginWithApple(appleId, email, null, (err, user) => {
+                expect(err).to.be.null;
+                expect(user).to.have.property('email', email);
+                expect(user).to.have.property('token');
+                done();
+            });
+        });
+
+        it('Connecte un utilisateur Apple existant', (done) => {
+            const appleId = 'apple123';
+            const email = 'appleuser@test.com'; // déjà créé précédemment
+
+            UserService.loginWithApple(appleId, email, null, (err, user) => {
+                expect(err).to.be.null;
+                expect(user).to.have.property('email', email);
+                expect(user).to.have.property('token');
+                done();
+            });
+        });
+
+        it('Erreur si AppleId manquant', (done) => {
+            UserService.loginWithApple(null, 'test@test.com', null, (err, user) => {
+                expect(err).to.have.property('type_error', 'no-valid');
+                done();
+            });
+        });
+ });
+
 describe("findOneUser", () => {
     it("Chercher un utilisateur par les champs sélectionné. -S", (done) => {
         UserService.findOneUser(["email"], users[0].email, null, function (err, value) {
@@ -161,7 +194,7 @@ describe("findManyUsers", () => {
             // console.log(err, value)
             expect(value).to.haveOwnProperty("count")
             expect(value).to.haveOwnProperty("results")
-            expect(value["count"]).to.be.equal(6)
+            expect(value["count"]).to.be.equal(7)
             expect(value["results"]).lengthOf(3)
             expect(err).to.be.null
             done()
