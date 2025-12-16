@@ -54,6 +54,7 @@ app.use((req, res, next) => {
 
 // /* --------------- Création des routes ------------ */
 
+app.post('/loginWithApple', DatabaseMiddleware.checkConnexion, UserController.loginWithApple);
 // Création du endpoint pour connecter un utilisateur
 app.post('/login', DatabaseMiddleware.checkConnexion, UserController.loginUser)
 

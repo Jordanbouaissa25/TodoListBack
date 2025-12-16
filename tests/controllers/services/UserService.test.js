@@ -135,6 +135,7 @@ describe("addManyUsers", () => {
 
         it('Erreur si AppleId manquant', (done) => {
             UserService.loginWithApple(null, 'test@test.com', null, (err, user) => {
+                // console.log(err, user)
                 expect(err).to.have.property('type_error', 'no-valid');
                 done();
             });

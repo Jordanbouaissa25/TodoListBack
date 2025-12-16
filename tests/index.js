@@ -73,9 +73,9 @@ describe("UserService", () => {
     require("./../tests/controllers/services/UserService.test");
 });
 
-// describe("UserController", () => {
-//     require("../tests/controllers/UserController.test")
-// })
+describe("UserController", () => {
+    require("../tests/controllers/UserController.test")
+})
 
 // describe("TaskService", () => {
 //     require("../tests/controllers/services/TaskService.test")

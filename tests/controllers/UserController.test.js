@@ -56,6 +56,55 @@ describe("POST - /register", () => {
     })
 })
 
+let appleUser = null;
+
+describe("POST - /loginWithApple", () => {
+
+    it("Créer et connecter un nouvel utilisateur Apple - S", (done) => {
+        chai.request(server)
+            .post('/loginWithApple')
+            .send({
+                appleId: "apple123",
+                email: "appleuser@test.com"
+            })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.body).to.have.property('email', 'appleuser@test.com');
+                expect(res.body).to.have.property('token');
+                appleUser = res.body; // sauvegarde pour test utilisateur existant
+                done();
+            });
+    });
+
+    it("Connecter un utilisateur Apple existant - S", (done) => {
+        chai.request(server)
+            .post('/loginWithApple')
+            .send({
+                appleId: "apple123",
+                email: "appleuser@test.com"
+            })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.body).to.have.property('email', 'appleuser@test.com');
+                expect(res.body).to.have.property('token');
+                done();
+            });
+    });
+
+    it("Erreur si AppleId manquant - E", (done) => {
+        chai.request(server)
+            .post('/loginWithApple')
+            .send({
+                email: "noappleid@test.com"
+            })
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                expect(res.body).to.have.property('type_error', 'no-valid');
+                done();
+            });
+    });
+});
+
 // TEST CONTROLLER - Connecter un utilisateur (tous les roles)
 describe("POST - /login", () => {
     it("Connexion utilisateur - S", (done) => {
@@ -254,7 +303,7 @@ describe("GET - /users_by_filters", () => {
                 // console.log(err, res.body)
                 res.should.have.status(200)
                 expect(res.body.results).to.be.an('array')
-                expect(res.body.count).to.be.equal(6)
+                expect(res.body.count).to.be.equal(7)
                 done()
             })
     })
