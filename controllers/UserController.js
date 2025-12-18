@@ -80,6 +80,33 @@ module.exports.loginUser = function (req, res, next) {
  *                    example: "internal"
  */
 
+module.exports.loginWithGoogle = function (req, res) { 
+    const { googleId, email } = req.body;
+
+    if (!googleId) {
+        res.statusCode = 405;
+        return res.send({
+            msg: "GoogleId manquant.",
+            type_error: "no-valid"
+        });
+    }
+
+    UserService.loginWithGoogle(googleId, email, null, (err, user) => {
+        if (err && err.type_error === "server-error") {
+            res.statusCode = 500;
+            return res.send({ msg: "Erreur serveur", type_error: "server-error" });
+        }
+        else if (err) {
+            res.statusCode = 405;
+            return res.send(err);
+        }
+        else {
+            res.statusCode = 200;
+            return res.send(user);
+        }
+    });
+};
+
 
 module.exports.logoutUser = function (req, res) {
     req.log.info("Déconnexion d'un utilisateur")

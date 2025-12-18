@@ -158,6 +158,57 @@ describe("POST - /users", () => {
     })
 })
 
+let googleUser = null;
+
+describe("POST - /loginWithGoogle", () => {
+
+    it("Créer et connecter un nouvel utilisateur Google - S", (done) => {
+        chai.request(server)
+            .post('/loginWithGoogle')
+            .send({
+                googleId: "google123",
+                email: "googleuser@test.com"
+            })
+            .end((err, res) => {
+                // console.log(err);
+                expect(res).to.have.status(200);
+                expect(res.body).to.have.property('email', 'googleuser@test.com');
+                expect(res.body).to.have.property('token');
+                googleUser = res.body; // sauvegarde pour test utilisateur existant
+                done();
+            });
+    });
+
+    it("Connecter un utilisateur Google existant - S", (done) => {
+        chai.request(server)
+            .post('/loginWithGoogle')
+            .send({
+                googleId: "google123",
+                email: "googleuser@test.com"
+            })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.body).to.have.property('email', 'googleuser@test.com');
+                expect(res.body).to.have.property('token');
+                done();
+            });
+    });
+
+    it("Erreur si GoogleId manquant - E", (done) => {
+        chai.request(server)
+            .post('/loginWithGoogle')
+            .send({
+                email: "nogoogleid@test.com"
+            })
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                expect(res.body).to.have.property('type_error', 'no-valid');
+                done();
+            });
+    });
+});
+
+
 describe("GET - /user", () => {
     it("Chercher un utilisateur valide. -S", (done) => {
         chai.request(server).get('/user').auth(token, { type: "bearer" }).query({ fields: ["email"], value: users[0].email }).end((err, res) => {
@@ -254,7 +305,7 @@ describe("GET - /users_by_filters", () => {
                 // console.log(err, res.body)
                 res.should.have.status(200)
                 expect(res.body.results).to.be.an('array')
-                expect(res.body.count).to.be.equal(4)
+                expect(res.body.count).to.be.equal(5)
                 done()
             })
     })
