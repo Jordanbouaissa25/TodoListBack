@@ -24,12 +24,6 @@ const userSchema = new Schema({
         type: String
     },
     token: String,
-    
-    appleId: {
-    type: String,
-    unique: true,
-    sparse: true // pour permettre null/absent pour les autres users
-}
 });
 
 module.exports = userSchema;

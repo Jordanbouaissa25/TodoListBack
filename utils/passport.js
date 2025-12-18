@@ -1,6 +1,6 @@
 var passport = require('passport')
 var LocalStrategy = require('passport-local').Strategy
-var UserService = require('../services/UserService')
+var UserService = require('./../services/UserService')
 const ConfigFile = require('../config')
 
 const passportJWT = require('passport-jwt')

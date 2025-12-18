@@ -6,6 +6,7 @@ let should = chai.should();
 const _ = require('lodash');
 const { query } = require('express');
 
+
 let user = null
 var users = []
 let token = ""
@@ -16,8 +17,8 @@ chai.use(chaiHttp)
 describe("POST - /register", () => {
     it("Ajouter un utilisateur . - S", (done) => {
         chai.request(server).post('/register').auth(token, { type: "bearer" }).send({
-            email: "jordanbouaissa257@gmail.com",
-            password: "1234567890",
+            email: "testeur23@gmail.com",
+            password: "012234567",
         }).end((err, res) => {
             //  console.log(err)
             expect(res).to.have.status(201)
@@ -37,10 +38,9 @@ describe("POST - /register", () => {
     })
     it("Ajouter un utilisateur incorrect. (Avec email déjà existant) - E", (done) => {
         chai.request(server).post('/register').auth(token, { type: "bearer" }).send({
-            email: "jordanbouaissa257@gmail.com",
+            email: "testeur23@gmail.com",
             password: "01234567"
         }).end((err, res) => {
-            // console.log(err, res.body)
             expect(res).to.have.status(405)
             done()
         })
@@ -56,62 +56,13 @@ describe("POST - /register", () => {
     })
 })
 
-let appleUser = null;
-
-describe("POST - /loginWithApple", () => {
-
-    it("Créer et connecter un nouvel utilisateur Apple - S", (done) => {
-        chai.request(server)
-            .post('/loginWithApple')
-            .send({
-                appleId: "apple123",
-                email: "appleuser@test.com"
-            })
-            .end((err, res) => {
-                expect(res).to.have.status(200);
-                expect(res.body).to.have.property('email', 'appleuser@test.com');
-                expect(res.body).to.have.property('token');
-                appleUser = res.body; // sauvegarde pour test utilisateur existant
-                done();
-            });
-    });
-
-    it("Connecter un utilisateur Apple existant - S", (done) => {
-        chai.request(server)
-            .post('/loginWithApple')
-            .send({
-                appleId: "apple123",
-                email: "appleuser@test.com"
-            })
-            .end((err, res) => {
-                expect(res).to.have.status(200);
-                expect(res.body).to.have.property('email', 'appleuser@test.com');
-                expect(res.body).to.have.property('token');
-                done();
-            });
-    });
-
-    it("Erreur si AppleId manquant - E", (done) => {
-        chai.request(server)
-            .post('/loginWithApple')
-            .send({
-                email: "noappleid@test.com"
-            })
-            .end((err, res) => {
-                expect(res).to.have.status(405);
-                expect(res.body).to.have.property('type_error', 'no-valid');
-                done();
-            });
-    });
-});
-
 // TEST CONTROLLER - Connecter un utilisateur (tous les roles)
 describe("POST - /login", () => {
     it("Connexion utilisateur - S", (done) => {
         // console.log(users)
         chai.request(server).post('/login').send({
-            username: "jordanbouaissa257@gmail.com",
-            password: "1234567890",
+            username: "testeur23@gmail.com",
+            password: "012234567"
         }).end((err, res) => {
             // console.log(err, res.body)
             res.should.have.status(200)
@@ -122,7 +73,7 @@ describe("POST - /login", () => {
     it("Connexion utilisateur - Identifiant incorrect - E", (done) => {
         chai.request(server).post('/login').send({
             username: "sksfksl@gmail.com",
-            password: "123456789"
+            password: "01234567"
         }).end((err, res) => {
             res.should.have.status(405)
             done()
@@ -130,7 +81,7 @@ describe("POST - /login", () => {
     })
     it("Connexion utilisateur - Mot de passe incorrect - E", (done) => {
         chai.request(server).post('/login').send({
-            username: "jordanbouaissa25@gmail.com",
+            username: "testeur@gmail.com",
             password: "password_incorrect"
         }).end((err, res) => {
             res.should.have.status(405)
@@ -181,7 +132,7 @@ describe("POST - /users", () => {
 
     it("Ajouter des utilisateurs incorrect. (Avec un email existant) - E", (done) => {
         chai.request(server).post('/users').auth(token, { type: "bearer" }).send([{
-            email: "jordanbouaissa257@gmail.com",
+            email: "testeur23@gmail.com",
             password: "ok"
         },
         {
@@ -303,7 +254,7 @@ describe("GET - /users_by_filters", () => {
                 // console.log(err, res.body)
                 res.should.have.status(200)
                 expect(res.body.results).to.be.an('array')
-                expect(res.body.count).to.be.equal(7)
+                expect(res.body.count).to.be.equal(4)
                 done()
             })
     })

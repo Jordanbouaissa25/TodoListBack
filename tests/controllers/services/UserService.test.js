@@ -108,39 +108,39 @@ describe("addManyUsers", () => {
     });
 });
 
-    describe('loginWithApple', () => {
-        it('Crée et connecte un nouvel utilisateur Apple', (done) => {
-            const appleId = 'apple123';
-            const email = 'appleuser@test.com';
+   describe('loginWithGoogle', () => {
+    it('Crée et connecte un nouvel utilisateur Google', (done) => {
+        const googleId = 'google123';
+        const email = 'googleuser@test.com';
 
-            UserService.loginWithApple(appleId, email, null, (err, user) => {
-                expect(err).to.be.null;
-                expect(user).to.have.property('email', email);
-                expect(user).to.have.property('token');
-                done();
-            });
+        UserService.loginWithGoogle(googleId, email, null, (err, user) => {
+            expect(err).to.be.null;
+            expect(user).to.have.property('email', email);
+            expect(user).to.have.property('token');
+            done();
         });
+    });
 
-        it('Connecte un utilisateur Apple existant', (done) => {
-            const appleId = 'apple123';
-            const email = 'appleuser@test.com'; // déjà créé précédemment
+    it('Connecte un utilisateur Google existant', (done) => {
+        const googleId = 'google123';
+        const email = 'googleuser@test.com'; // déjà créé précédemment
 
-            UserService.loginWithApple(appleId, email, null, (err, user) => {
-                expect(err).to.be.null;
-                expect(user).to.have.property('email', email);
-                expect(user).to.have.property('token');
-                done();
-            });
+        UserService.loginWithGoogle(googleId, email, null, (err, user) => {
+            expect(err).to.be.null;
+            expect(user).to.have.property('email', email);
+            expect(user).to.have.property('token');
+            done();
         });
+    });
 
-        it('Erreur si AppleId manquant', (done) => {
-            UserService.loginWithApple(null, 'test@test.com', null, (err, user) => {
-                // console.log(err, user)
-                expect(err).to.have.property('type_error', 'no-valid');
-                done();
-            });
+    it('Erreur si GoogleId manquant', (done) => {
+        UserService.loginWithGoogle(null, 'test@test.com', null, (err, user) => {
+            expect(err).to.have.property('type_error', 'no-valid');
+            done();
         });
- });
+    });
+});
+
 
 describe("findOneUser", () => {
     it("Chercher un utilisateur par les champs sélectionné. -S", (done) => {

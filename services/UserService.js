@@ -91,6 +91,25 @@ module.exports.addOneUser = async function (user, options, callback) {
 };
 
 
+module.exports.loginUser = async function (email, password, options, callback) {
+  module.exports.findOneUser(["email"], email, null, async (err, value) => {
+    if (err)
+      callback(err)
+    else {
+      if (bcrypt.compareSync(password, value.password)) {
+        var token = TokenUtils.createToken({ _id: value._id }, null)
+
+        module.exports.updateOneUser(value._id, { token: token }, null, (err, value) => {
+          callback(null, { ...value, token: token })
+        })
+      }
+      else {
+        callback({ msg: "La comparaison des mots de passe est fausse.", type_error: "no-comparaison" })
+      }
+    }
+  })
+}
+
 module.exports.addManyUsers = async function (users, options, callback) {
   var errors = [];
 
@@ -147,20 +166,19 @@ module.exports.addManyUsers = async function (users, options, callback) {
   }
 };
 
-module.exports.loginWithApple = async function (appleId, email, options, callback) {
-  if (!appleId) return callback({ msg: "AppleId est requis.", type_error: "no-valid" });
+module.exports.loginWithGoogle = async function (googleId, email, options, callback) {
+  if (!googleId) return callback({ msg: "GoogleId est requis.", type_error: "no-valid" });
 
   try {
-    const user = await User.findOne({ $or: [{ appleId }, { email }] });
+    const user = await User.findOne({ $or: [{ googleId }, { email }] });
     if (user) {
       const token = TokenUtils.createToken({ _id: user._id }, null);
       await User.findByIdAndUpdate(user._id, { token }, { new: true });
       return callback(null, { ...user.toObject(), token });
     }
 
-    // Création d'un nouvel utilisateur si inexistant
     const newUser = new User({
-      appleId,
+      googleId,
       email: email || "",
       password: Math.random().toString(36).slice(-8)
     });
@@ -178,7 +196,7 @@ module.exports.loginWithApple = async function (appleId, email, options, callbac
         language: "fr",
         user_id: newUser._id
       });
-    } catch (err) { }
+    } catch (err) {}
 
     const token = TokenUtils.createToken({ _id: newUser._id }, null);
     await User.findByIdAndUpdate(newUser._id, { token }, { new: true });
@@ -188,25 +206,6 @@ module.exports.loginWithApple = async function (appleId, email, options, callbac
     callback({ msg: "Erreur serveur", type_error: "server-error" });
   }
 };
-
-module.exports.loginUser = async function (email, password, options, callback) {
-  module.exports.findOneUser(["email"], email, null, async (err, value) => {
-    if (err)
-      callback(err)
-    else {
-      if (bcrypt.compareSync(password, value.password)) {
-        var token = TokenUtils.createToken({ _id: value._id }, null)
-
-        module.exports.updateOneUser(value._id, { token: token }, null, (err, value) => {
-          callback(null, { ...value, token: token })
-        })
-      }
-      else {
-        callback({ msg: "La comparaison des mots de passe est fausse.", type_error: "no-comparaison" })
-      }
-    }
-  })
-}
 
 module.exports.findOneUserById = function (user_id, options, callback) {
   if (user_id && mongoose.isValidObjectId(user_id)) {
@@ -228,6 +227,7 @@ module.exports.findOneUserById = function (user_id, options, callback) {
     callback({ msg: "ObjectId non conforme.", type_error: 'no-valid' });
   }
 }
+
 
 module.exports.findOneUser = function (tab_field, value, options, callback) {
   var field_unique = ["email"]

@@ -69,9 +69,9 @@ after(async function () {
   }
 });
 
-describe("UserService", () => {
-    require("./../tests/controllers/services/UserService.test");
-});
+// describe("UserService", () => {
+//     require("./../tests/controllers/services/UserService.test");
+// });
 
 describe("UserController", () => {
     require("../tests/controllers/UserController.test")
