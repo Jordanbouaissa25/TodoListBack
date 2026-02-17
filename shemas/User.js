@@ -24,6 +24,9 @@ const userSchema = new Schema({
         type: String
     },
     token: String,
+
+   resetToken: { type: String },
+resetTokenExpiration: { type: Date }
 });
 
 module.exports = userSchema;

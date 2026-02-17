@@ -1,6 +1,8 @@
 const UserService = require('../services/UserService')
 const LoggerHttp = require('../utils/logger').http
 const passport = require('passport')
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 
 // La fonction pour gerer l'authentification depuis passport
 module.exports.loginUser = function (req, res, next) {
@@ -884,4 +886,94 @@ module.exports.deleteManyUsers = function (req, res) {
  *                    example: "Erreur serveur interne."
  */
 
+module.exports.forgotPassword = async function (req, res) {
+    const { email } = req.body;
 
+    if (!email) {
+        res.statusCode = 405;
+        return res.send({
+            msg: "Email manquant.",
+            type_error: "no-valid"
+        });
+    }
+
+    try {
+        // 1️⃣ Vérifier que l'utilisateur existe
+        UserService.findOneUser(["email"], email, null, async (err, user) => {
+            if (err && err.type_error === "no-found") {
+                res.statusCode = 404;
+                return res.send({
+                    msg: "Utilisateur non trouvé.",
+                    type_error: "no-found"
+                });
+            }
+            if (err) {
+                res.statusCode = 500;
+                return res.send({
+                    msg: "Erreur serveur.",
+                    type_error: "server-error"
+                });
+            }
+
+            // 2️⃣ Générer un token sécurisé
+            const resetToken = crypto.randomBytes(32).toString("hex");
+            const resetTokenExpiration = Date.now() + 3600000; // 1h
+
+            // 3️⃣ Sauvegarder le token en base
+            UserService.updateOneUser(
+                user._id,
+                {
+                    resetToken: resetToken,
+                    resetTokenExpiration: resetTokenExpiration
+                },
+                null,
+                async (err) => {
+                    if (err) {
+                        res.statusCode = 500;
+                        return res.send({
+                            msg: "Erreur lors de la sauvegarde du token.",
+                            type_error: "server-error"
+                        });
+                    }
+
+                    // 4️⃣ Configurer nodemailer
+                    const transporter = nodemailer.createTransport({
+                        service: "gmail",
+                        auth: {
+                            user: process.env.EMAIL_USER,
+                            pass: process.env.EMAIL_PASS
+                        }
+                    });
+
+                    const resetUrl = `${process.env.FRONT_URL}/reset-password/${resetToken}`;
+
+                    const mailOptions = {
+                        from: process.env.EMAIL_USER,
+                        to: email,
+                        subject: "Réinitialisation de votre mot de passe",
+                        html: `
+                            <h3>Réinitialisation de mot de passe</h3>
+                            <p>Cliquez sur le lien ci-dessous pour réinitialiser votre mot de passe :</p>
+                            <a href="${resetUrl}">${resetUrl}</a>
+                            <p>Ce lien expire dans 1 heure.</p>
+                        `
+                    };
+
+                    await transporter.sendMail(mailOptions);
+
+                    res.statusCode = 200;
+                    return res.send({
+                        message: "Email de réinitialisation envoyé."
+                    });
+                }
+            );
+        });
+
+    } catch (error) {
+        res.statusCode = 500;
+        return res.send({
+            msg: "Erreur serveur interne.",
+            type_error: "server-error"
+        });
+    }
+};

@@ -5,6 +5,8 @@ const server = require('../../server')
 let should = chai.should();
 const _ = require('lodash');
 const { query } = require('express');
+const sinon = require("sinon");
+const nodemailer = require("nodemailer");
 
 
 let user = null
@@ -653,3 +655,60 @@ describe("DELETE - /users", () => {
             })
     })
 })
+
+describe("POST - /forgotPassword", () => {
+
+    let sendMailStub;
+
+    before(() => {
+        // Mock nodemailer pour éviter envoi réel
+        sendMailStub = sinon.stub().resolves(true);
+
+        sinon.stub(nodemailer, "createTransport").returns({
+            sendMail: sendMailStub
+        });
+    });
+
+    after(() => {
+        sinon.restore();
+    });
+
+    it("Envoyer un email de reset correctement - S", (done) => {
+        chai.request(server)
+            .post('/forgotPassword')
+            .send({
+                email: "jordanbouaissa25@gmail.com"
+            })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.body).to.have.property("message");
+                expect(sendMailStub.calledOnce).to.be.true;
+                done();
+            });
+    });
+
+    it("Essayer avec un utilisateur inexistant - E", (done) => {
+        chai.request(server)
+            .post('/forgotPassword')
+            .send({
+                email: "unknown@gmail.com"
+            })
+            .end((err, res) => {
+                expect(res).to.have.status(404);
+                expect(res.body).to.have.property("type_error", "no-found");
+                done();
+            });
+    });
+
+    it("Essayer sans email - E", (done) => {
+        chai.request(server)
+            .post('/forgotPassword')
+            .send({})
+            .end((err, res) => {
+                expect(res).to.have.status(405);
+                expect(res.body).to.have.property("type_error", "no-valid");
+                done();
+            });
+    });
+
+});

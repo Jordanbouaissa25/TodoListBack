@@ -97,6 +97,7 @@ app.delete("/users", DatabaseMiddleware.checkConnexion, passport.authenticate('j
 // Création du endpoint /logout pour déconnecter un utilisateur
 app.post('/logout', DatabaseMiddleware.checkConnexion, passport.authenticate('jwt', { session: false }), UserController.logoutUser)
 
+app.post('/forgotPassword', DatabaseMiddleware.checkConnexion, UserController.forgotPassword)
 // Démarrage de notre serveur le port choisi
 
 

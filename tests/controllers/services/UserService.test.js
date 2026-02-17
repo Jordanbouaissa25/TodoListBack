@@ -531,6 +531,82 @@ describe("updatePassword", () => {
 //     });
 // });
 
+describe("forgotPassword ", () => {
+
+    it("Demande de réinitialisation avec email valide existant - S", (done) => {
+        UserService.forgotPassword(
+            "edouard.dupont@gmail.com",
+            null,
+            function (err, value) {
+                expect(err).to.be.null;
+                expect(value).to.be.an("object");
+                expect(value).to.haveOwnProperty("msg");
+                done();
+            }
+        );
+    });
+
+    it("Demande de réinitialisation avec email valide inexistant - S (sécurité)", (done) => {
+        UserService.forgotPassword(
+            "email.inexistant@gmail.com",
+            null,
+            function (err, value) {
+                // IMPORTANT : pas d'erreur pour éviter l’énumération d’email
+                expect(err).to.be.null;
+                expect(value).to.be.an("object");
+                expect(value).to.haveOwnProperty("msg");
+                done();
+            }
+        );
+    });
+
+    it("Demande de réinitialisation sans email - E", (done) => {
+        UserService.forgotPassword(
+            null,
+            null,
+            function (err, value) {
+                expect(value).to.be.undefined;
+                expect(err).to.be.an("object");
+                expect(err).to.haveOwnProperty("msg");
+                expect(err).to.haveOwnProperty("type_error");
+                expect(err["type_error"]).to.equal("no-valid");
+                done();
+            }
+        );
+    });
+
+    it("Demande de réinitialisation avec email vide - E", (done) => {
+        UserService.forgotPassword(
+            "",
+            null,
+            function (err, value) {
+                expect(value).to.be.undefined;
+                expect(err).to.haveOwnProperty("msg");
+                expect(err).to.haveOwnProperty("type_error");
+                expect(err["type_error"]).to.equal("no-valid");
+                done();
+            }
+        );
+    });
+
+    it("Demande de réinitialisation avec email invalide - E", (done) => {
+        UserService.forgotPassword(
+            "email_invalide",
+            null,
+            function (err, value) {
+                expect(value).to.be.undefined;
+                expect(err).to.be.an("object");
+                expect(err).to.haveOwnProperty("msg");
+                expect(err).to.haveOwnProperty("type_error");
+                expect(err["type_error"]).to.equal("no-valid");
+                done();
+            }
+        );
+    });
+
+});
+
+
 describe("deleteOneUser", () => {
     it("Supprimer un utilisateur correct. - S", (done) => {
         UserService.deleteOneUser(id_user_valid, null, function (err, value) {

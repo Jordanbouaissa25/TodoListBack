@@ -598,6 +598,49 @@ module.exports.updatePassword = async function (email, newPassword, options, cal
 //   }
 // }
 
+module.exports.forgotPassword = async function (email, options, callback) {
+
+  // ✅ Email requis
+  if (!email || typeof email !== "string" || email.trim() === "") {
+    return callback({
+      msg: "Email invalide.",
+      type_error: "no-valid"
+    });
+  }
+
+  // ✅ Format email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return callback({
+      msg: "Email invalide.",
+      type_error: "no-valid"
+    });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    // 🔐 Sécurité : on ne révèle jamais si l'utilisateur existe
+    if (!user) {
+      return callback(null, {
+        msg: "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé."
+      });
+    }
+
+    // (Plus tard : génération token + email)
+    return callback(null, {
+      msg: "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé."
+    });
+
+  } catch (err) {
+    return callback({
+      msg: "Erreur serveur.",
+      type_error: "server-error"
+    });
+  }
+};
+
+
 module.exports.deleteOneUser = function (user_id, options, callback) {
   if (user_id && mongoose.isValidObjectId(user_id)) {
     User.findByIdAndDelete(user_id).then((value) => {
